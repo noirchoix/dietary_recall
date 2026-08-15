@@ -1,0 +1,1 @@
+uvicorn[standard]<1,>=0.30

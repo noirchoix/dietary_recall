@@ -1,0 +1,175 @@
+/* Authentication gate and consistent platform form controls. */
+.public-shell {
+  min-height: 100vh;
+}
+
+.auth-gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  padding: 24px;
+  background: radial-gradient(circle at 20% 20%, #dfe9d8 0, transparent 30%), #edf2ee;
+  color: #173632;
+}
+
+.auth-gate-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #c3dc73, #75ad72);
+  color: #12302d;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 8px 24px #234b4030;
+}
+
+.auth-gate-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.auth-gate-copy strong {
+  font-size: 12px;
+}
+
+.auth-gate-copy span {
+  color: #73847f;
+  font-size: 10px;
+}
+
+.auth-gate-spinner {
+  width: 16px;
+  height: 16px;
+  margin-left: 5px;
+  border: 2px solid #bfd0c8;
+  border-top-color: #2f7564;
+  border-radius: 50%;
+  animation: auth-spin .75s linear infinite;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+.field {
+  gap: 7px;
+}
+
+.field label,
+.card > label,
+.form-grid > label {
+  color: #536b65;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .045em;
+}
+
+.card > label,
+.form-grid > label {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.field input,
+.field select,
+.field textarea,
+.card > label input,
+.card > label select,
+.card > label textarea,
+.form-grid > label input,
+.form-grid > label select,
+.form-grid > label textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #c9d7d1;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  outline: none;
+}
+
+.field input,
+.field select,
+.card > label input,
+.card > label select,
+.form-grid > label input,
+.form-grid > label select {
+  min-height: 41px;
+  padding: 9px 11px;
+}
+
+.field textarea,
+.card > label textarea,
+.form-grid > label textarea {
+  min-height: 82px;
+  padding: 10px 11px;
+  resize: vertical;
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover,
+.card > label input:hover,
+.card > label select:hover,
+.card > label textarea:hover,
+.form-grid > label input:hover,
+.form-grid > label select:hover,
+.form-grid > label textarea:hover {
+  border-color: #aebfb8;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.card > label input:focus,
+.card > label select:focus,
+.card > label textarea:focus,
+.form-grid > label input:focus,
+.form-grid > label select:focus,
+.form-grid > label textarea:focus {
+  border-color: #4f8d7b;
+  box-shadow: 0 0 0 3px #4f8d7b1c;
+}
+
+.form-grid {
+  gap: 15px;
+}
+
+.form-grid > .btn {
+  align-self: end;
+  min-height: 41px;
+}
+
+.btn {
+  min-height: 38px;
+}
+
+.btn:focus-visible {
+  outline: 3px solid #3f806d2b;
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: .62;
+}
+
+.card-sub {
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-gate-spinner {
+    animation-duration: 1.5s;
+  }
+}

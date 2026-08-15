@@ -1,0 +1,21 @@
+{
+  "applied_at": "2026-08-14T07:12:52.829130+01:00",
+  "backup": "C:\\Users\\dicks\\Downloads\\Dietary_Recall_Research_Platform_v0.3\\Dietary_Recall_Research_Platform_v0.3.backup-before-v0.4.4-20260814-071252",
+  "database_modified": false,
+  "release": "0.4.4",
+  "target_hashes": {
+    "README.md": "f5b232e074bed9cf9336d8b4eecbc0db6559b6092ebe2ec35c3cf5939dc90fba",
+    "RELEASE_NOTES.md": "79d5a97767a92cd193048de53ffbc41fa87db10eda4003d68498fcfb94c16326",
+    "VERIFICATION.md": "b7ada5796a4f74f934c4a0ef51d18017cd1c27b1dfb42c1469cabd609229067a",
+    "backend/README.md": "cba5be881b63f6700cb0c1b9b0889e546d13601f726b8691752b3e8dd7a439a1",
+    "backend/pyproject.toml": "680b7e966a074120bb32045a00d1a5ea22aa9a83ba22369ef3fe7f2a2610b997",
+    "backend/src/dietary_recall/api_app.py": "f07f579ca64bef266dc45eb894557b7789a986fb33f9cd000654eef6ba27b89a",
+    "backend/src/dietary_recall/cli.py": "78ea834b78251de908382bd092cfa8cd39baa4bdffffab31afad68c35eb0a3e9",
+    "backend/tests/test_frontend_auth_boundary.py": "f76c673a9b599c77ead0add3e65e407edf99be2962e201f9eb150691885cb22a",
+    "frontend/package-lock.json": "181e22a9a99972552b7e0270d39a09d691d1d477a768f7ed647a2792b2099a2c",
+    "frontend/package.json": "75060de97c8f1ea4e5f9b2275acd02b45f65cb5af117158f8f0f48c92feec595",
+    "frontend/src/auth.css": "bca11d9dedb77b660a4d320662facd0a5bacffc938f37801e0b8fbe1c2df2dfe",
+    "frontend/src/routes/+layout.svelte": "14fa307fc5615eba8c239acb8241244c27b9f0a598c2663a876da9f560d53fad",
+    "frontend/src/routes/login/+page.svelte": "0b216381d8db6c0057f496469a8caecbb5c20173c597ee75b49ccbe4d70082c0"
+  }
+}

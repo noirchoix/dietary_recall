@@ -1,0 +1,2 @@
+[console_scripts]
+dietary-recall = dietary_recall.cli:main

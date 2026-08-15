@@ -1,0 +1,33 @@
+# Research and authentication databases never belong in source control.
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+backend/data/
+backend/secrets/
+data/
+secrets/
+
+# Exports can contain direct or linkable research records.
+export/
+exports/
+raw_tables/
+artifacts/
+backend/artifacts/
+
+# Local configuration and tool output.
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+backend/venv/
+backend/.venv/
+frontend/node_modules/
+frontend/build/
+frontend/.svelte-kit/
+*.log

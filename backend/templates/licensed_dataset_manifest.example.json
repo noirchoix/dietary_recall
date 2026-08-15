@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "dataset_code": "INSTITUTION-AUTHORIZED-NIGERIA-FCT",
+  "source_release_uid": "rel_replace_with_registered_release_uid",
+  "conflict_policy": "reject",
+  "license": {
+    "accepted": true,
+    "source_uid": "src_replace_with_registered_source_uid",
+    "name": "Replace with exact licence name",
+    "url": "https://publisher.example/licence",
+    "text_sha256": "replace_with_64_lowercase_hex_characters_for_exact_licence_text",
+    "permitted_use": "research_only",
+    "redistribution_permitted": false,
+    "expires_at": null,
+    "notes": "Acceptance confirmed by the deploying institution."
+  },
+  "files": [
+    {
+      "path": "external_foods.csv",
+      "entity_type": "external_foods",
+      "sha256": "replace_with_sha256_of_exact_csv_bytes"
+    },
+    {
+      "path": "external_components.csv",
+      "entity_type": "external_components",
+      "sha256": "replace_with_sha256_of_exact_csv_bytes"
+    },
+    {
+      "path": "retention_factors.csv",
+      "entity_type": "retention_factors",
+      "sha256": "replace_with_sha256_of_exact_csv_bytes"
+    }
+  ]
+}

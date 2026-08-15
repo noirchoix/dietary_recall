@@ -1,0 +1,90 @@
+.sidebar {
+  overflow-y: auto;
+}
+
+.sidebar nav {
+  padding: 14px 0;
+  gap: 3px;
+}
+
+.sidebar nav a {
+  padding: 8px 11px;
+  font-size: 11px;
+}
+
+.layer-card {
+  margin-top: 8px;
+}
+
+.project-switcher {
+  padding: 14px 8px 3px;
+  display: grid;
+  gap: 5px;
+}
+
+.project-switcher label {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: #91a9a3;
+  font-weight: 800;
+}
+
+.project-switcher select {
+  width: 100%;
+  background: #173735;
+  color: #eaf3ed;
+  border: 1px solid #34514f;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 10px;
+}
+
+.project-switcher small {
+  color: #91a9a3;
+  font-size: 9px;
+}
+
+.quota-grid,
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.quota-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.quota-card strong {
+  display: block;
+  font-family: Georgia, serif;
+  font-size: 26px;
+  margin: 8px 0 4px;
+}
+
+.recipe-ingredient {
+  display: grid;
+  grid-template-columns: 1.5fr .7fr .7fr auto;
+  gap: 8px;
+  align-items: end;
+  padding: 10px;
+  background: #f1f5f0;
+  border-radius: 9px;
+}
+
+@media (max-width: 1000px) {
+  .quota-grid,
+  .platform-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .recipe-ingredient {
+    grid-template-columns: 1fr;
+  }
+}

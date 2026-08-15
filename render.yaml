@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: dietary-recall-npf-demo-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: python scripts/verify_repository_safety.py && python -m pip install -e .
+    startCommand: dietary-recall demo-serve --host 0.0.0.0 --port $PORT --secure-cookies --allowed-origin "$DIETARY_RECALL_PUBLIC_ORIGIN"
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.11
+      - key: DIETARY_RECALL_PUBLIC_ORIGIN
+        value: https://dietary-recall-npf-demo.onrender.com
+      - key: DIETARY_RECALL_DEMO_EMAIL
+        value: demo@dietary-recall.local
+      - key: DIETARY_RECALL_DEMO_PASSWORD
+        sync: false
+
+  - type: web
+    name: dietary-recall-npf-demo
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run check && npm run build
+    staticPublishPath: build
+    autoDeployTrigger: commit
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://dietary-recall-npf-demo-api.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()

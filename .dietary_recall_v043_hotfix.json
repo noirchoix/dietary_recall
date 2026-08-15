@@ -1,0 +1,28 @@
+{
+  "applied_at": "2026-08-14T06:29:07.571404+01:00",
+  "backup": "C:\\Users\\dicks\\Downloads\\Dietary_Recall_Research_Platform_v0.3\\Dietary_Recall_Research_Platform_v0.3.backup-before-v0.4.3-20260814-062907",
+  "database_modified": false,
+  "release": "0.4.3",
+  "target_hashes": {
+    "README.md": "95cfbdf59c0a8ed9033d3f80a9f346405974c6b29db0316c9aa76a02c0016e43",
+    "RELEASE_NOTES.md": "8a01674878f73355d8733ae63723ef661e520c7648076d8be84e8c98317744de",
+    "VERIFICATION.md": "e63d2a35d1d9420e2486496a47c538dd3e8afd7d1b2766483eb3bde809ed348a",
+    "backend/README.md": "e8c527a9a1d114d7172cb07c0dd9f25a2599e288ff584c467618cefc87f88f4e",
+    "backend/docs/DEPLOYMENT_V04.md": "3ca138c5cbcb35326108ed0bc759c2245375d1288acdb66cb2fef5165a2e6711",
+    "backend/docs/RESEARCH_DATA_PLATFORM.md": "64f924a720c1e3f3ae25cb1caff78e0634fdf434e1c68b796f311c22049a5cf0",
+    "backend/pyproject.toml": "611ffdf41209780a0eea558305c243d96455f309314e46db3e8577a527cdaa9c",
+    "backend/src/dietary_recall/api_app.py": "5eab887daaa5e54462952cc66ef11b7f5fd38ed4a64f90aaa17798b8b5a90225",
+    "backend/src/dietary_recall/asgi_runtime.py": "0fc2370e817ff8eb6790548d2f98b7e229c7f1e238f6ef7db38c97bb21395724",
+    "backend/src/dietary_recall/cli.py": "4b7bb6bf1b30089b68e5e51c5f6d9b76e0282bf0dd73189071119a10fe74ffd7",
+    "backend/src/dietary_recall/platform_server.py": "8d037a0e8ed0f38ae339c1f2d0c664c71c3ea9d8aca393b322c4d23617fc0d5e",
+    "backend/tests/test_api_boundary.py": "d43ca49571061128024cc28b1ddd9a7d220cda84587785bbc024038c587a24b4",
+    "frontend/.env.example": "5fb45fa73e74b7d0998b5508b6359ae9b92cf475644889e27e916637dcd583f0",
+    "frontend/DEVELOPMENT.md": "4dec854fbe13f0d424c30df848c21cf13bc37106fdc6303f725920bc9f05756d",
+    "frontend/package-lock.json": "d871ac2f52a672c3400ab8475ba4f126e247622d3ac032577a79376ac7426c4e",
+    "frontend/package.json": "25d8a303b21ccf448071eed96a383cc19836680dfe962981ee8701c87482848a",
+    "frontend/src/lib/api.ts": "12acb7130819cc00c21e3f91f0e5279f25d1f06e3c45e92e4bf12a3a7aeed819",
+    "frontend/src/routes/+layout.svelte": "c43f7d90a91046ba0b6968a2b149c33e4bb82fbc91f1b967c23b88461759111e",
+    "frontend/src/routes/login/+page.svelte": "ceedf47dc071fcc935b0a548075ce0efbc41776b3b74e07a96d1c2da88d42e04",
+    "frontend/vite.config.ts": "3571fa61641220eae48cc2b4d825e4791df0d7708fcdbcb4c3e868fee6443aec"
+  }
+}

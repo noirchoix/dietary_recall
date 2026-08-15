@@ -1,0 +1,14 @@
+{
+  "applied_at": "2026-08-13T22:48:31.059911+01:00",
+  "backup": "C:\\Users\\dicks\\Downloads\\Dietary_Recall_Research_Platform_v0.3\\Dietary_Recall_Research_Platform_v0.3.backup-before-v0.4.1-20260813-224830",
+  "release": "0.4.1",
+  "target_hashes": {
+    "RELEASE_NOTES.md": "e5ec6d10fc6e2df135dd9b31c49d1e16e06bc074b2eab2b8ce3655a44b994689",
+    "backend/pyproject.toml": "d21173d247f9a1875f50c58d30a4d0b2eddac058942917ff4c56d7bbffbb34d8",
+    "backend/src/dietary_recall/db.py": "a8da335dca387128ea2cce10deb3df1b22670b8ce71b0fc551f0f55b6a51837f",
+    "backend/src/dietary_recall/research_core.py": "9e596b12afc632a21466c33bb4457090c853eeec416393e6647fd79290f8bacc",
+    "backend/src/dietary_recall/security.py": "dac4389e59d93b25ac641922c0a79c79a73d937f941860058f1cc45ff70867bb",
+    "backend/src/dietary_recall/workspace.py": "e1da62ca4718ae8848bc4d86373f3e633213bd6087d82c3b274ec4cae8db5f59",
+    "backend/tests/test_connection_lifecycle.py": "21815f2c5f7986113cabf087180e9243ddcf6cb67e0aac9934f43e7b8122700e"
+  }
+}
