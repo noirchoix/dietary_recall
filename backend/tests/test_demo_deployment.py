@@ -15,6 +15,11 @@ class DemoDeploymentTests(unittest.TestCase):
         self.assertIn("dietary-recall demo-serve", source)
         self.assertIn("source: /api/*", source)
         self.assertIn("destination: /index.html", source)
+        self.assertLess(source.index("source: /api/*"), source.index("source: /*"))
+        self.assertIn("path: /index.html", source)
+        self.assertIn("no-cache, no-store, must-revalidate", source)
+        self.assertIn("path: /_app/*", source)
+        self.assertIn("max-age=31536000, immutable", source)
         self.assertIn("sync: false", source)
         self.assertNotIn("Nutrients-research-v04.db", source)
 

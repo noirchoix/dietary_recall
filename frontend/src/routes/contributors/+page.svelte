@@ -33,7 +33,7 @@
   <div><span class="kicker">Research group</span><h1>Contributors</h1><p>Global identities join project spaces through owner, admin, contributor, analyst or viewer memberships. Participant records remain separate.</p></div>
   <button class="btn" onclick={() => { selected = null; form = { email: '', display_name: '', project_role: 'contributor' }; show = true; }}>＋ Add contributor</button>
 </div>
-<div class="notice warn" style="margin-bottom:14px">Local mode uses the actor header for provenance and role checks. A deployed service must connect verified authentication; this research database stores no passwords.</div>
+<div class="notice warn" style="margin-bottom:14px">Adding a membership record does not create login credentials. The public demo exposes one credentialed account; production collaboration requires each contributor to be provisioned through the authentication service.</div>
 {#if error}<div class="error" style="margin-bottom:12px">{error}</div>{/if}{#if message}<div class="success" style="margin-bottom:12px">{message}</div>{/if}
 <div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Project role</th><th>Status</th><th>Actions</th></tr></thead><tbody>
   {#each rows as member}<tr><td>{member.display_name}</td><td>{member.email}</td><td><span class="status">{member.project_role}</span></td><td>{member.status}</td><td><button class="btn secondary small" onclick={() => edit(member)}>Edit</button> {#if member.project_role !== 'owner'}<button class="btn secondary small" onclick={() => suspend(member)}>Suspend</button>{/if}</td></tr>{/each}
@@ -43,4 +43,3 @@
   <div class="form-grid"><div class="field span-2"><label>Email <input type="email" bind:value={form.email} disabled={!!selected} /></label></div><div class="field"><label>Display name <input bind:value={form.display_name} disabled={!!selected} /></label></div><div class="field"><label>Project role <select bind:value={form.project_role}><option value="admin">Admin</option><option value="contributor">Contributor</option><option value="analyst">Analyst</option><option value="viewer">Viewer</option></select></label></div></div>
   <div class="panel-actions"><button class="btn secondary" onclick={() => (show = false)}>Cancel</button><button class="btn" onclick={save}>Save membership</button></div>
 </section></div>{/if}
-

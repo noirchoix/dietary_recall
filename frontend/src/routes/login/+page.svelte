@@ -1,7 +1,7 @@
 <script lang="ts">
   import { base } from '$app/paths';
   import { onMount } from 'svelte';
-  import { get, login } from '$lib/api';
+  import { getWithStartupRetry, login } from '$lib/api';
 
   let email = $state('');
   let password = $state('');
@@ -9,14 +9,21 @@
   let busy = $state(false);
   let showPassword = $state(false);
   let demoMode = $state(false);
+  let serviceState = $state<'checking' | 'waking' | 'ready' | 'unavailable'>('checking');
 
-  onMount(async () => {
+  async function loadConfig() {
+    serviceState = 'checking';
     try {
-      const config = await get<any>('/api/config');
+      const config = await getWithStartupRetry<any>('/api/config', () => (serviceState = 'waking'));
       demoMode = config.ephemeral_demo === true;
       if (demoMode && config.demo_email) email = config.demo_email;
-    } catch {}
-  });
+      serviceState = 'ready';
+    } catch {
+      serviceState = 'unavailable';
+    }
+  }
+
+  onMount(loadConfig);
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -70,7 +77,11 @@
         <h1 id="login-heading">Welcome back</h1>
         <p class="login-intro">Sign in to continue to your research project.</p>
 
-        {#if demoMode}<div class="demo-login-note"><span>DEMO</span><p><b>Disposable synthetic workspace</b><small>The email is filled in for you. Use the demonstration password shared with you; changes reset when the service restarts.</small></p></div>{/if}
+        {#if serviceState === 'waking'}
+          <div class="demo-login-note"><span>WAIT</span><p><b>Starting the demonstration API</b><small>The free service can take about a minute to wake. This page is checking again automatically.</small></p></div>
+        {:else if serviceState === 'unavailable'}
+          <div class="demo-login-note service-unavailable"><span>API</span><p><b>The research API is not ready</b><small>Retry the connection. If this persists, verify that the static-site <code>/api/*</code> rewrite points to the API service.</small><button type="button" onclick={loadConfig}>Retry connection</button></p></div>
+        {:else if demoMode}<div class="demo-login-note"><span>DEMO</span><p><b>Disposable synthetic workspace</b><small>The email is filled in for you. Use the demonstration password shared with you; changes reset when the service restarts.</small></p></div>{/if}
 
         {#if error}
           <div class="login-error" role="alert">
@@ -227,6 +238,9 @@
   .demo-login-note b, .demo-login-note small { display: block; }
   .demo-login-note b { color: #4d5a37; font-size: 9px; }
   .demo-login-note small { margin-top: 3px; color: #747b5a; font-size: 8px; line-height: 1.5; }
+  .demo-login-note button { margin-top: 7px; padding: 0; border: 0; background: transparent; color: #315e53; font-size: 9px; font-weight: 850; text-decoration: underline; }
+  .demo-login-note code { font-size: 8px; }
+  .service-unavailable { border-color: #edcfca; background: #fff5f3; }
   form { display: grid; gap: 20px; }
   .login-field { display: grid; gap: 8px; }
   .login-field label { color: #2c4843; font-size: 12px; font-weight: 750; }

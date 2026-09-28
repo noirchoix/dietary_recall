@@ -180,5 +180,44 @@ class ApiBoundaryTests(unittest.TestCase):
         logout = client.post("/api/auth/logout", json={}, headers={"X-CSRF-Token": csrf})
         self.assertEqual(200, logout.status_code)
         self.assertFalse(logout.json()["authenticated"])
+
+    def test_direct_composition_preview_scales_current_values_without_saving(self):
+        auth_path = self.root / "calculator-auth.db"
+        auth = CredentialStore.initialize(auth_path)
+        from dietary_recall.validated_research import PlatformRepository
+
+        with PlatformRepository(self.v04).connect() as con:
+            owner = con.execute("SELECT user_uid,email FROM app_users ORDER BY created_at LIMIT 1").fetchone()
+        auth.set_password(owner["email"], owner["user_uid"], "Fixture-password-2026")
+        client = AsgiClient(create_app(self.v04, auth_db=auth_path, allow_insecure_auth=True, host="127.0.0.1"))
+        login = client.post(
+            "/api/auth/login",
+            json={"email": owner["email"], "password": "Fixture-password-2026"},
+        )
+        csrf = login.json()["csrf_token"]
+        foods = client.get("/api/foods").json()
+        preview = client.post(
+            "/api/composition/calculate",
+            json={"items": [{"food_uid": foods[0]["food_uid"], "grams": 150}]},
+            headers={"X-CSRF-Token": csrf},
+        )
+
+        self.assertEqual(200, preview.status_code, preview.text)
+        self.assertEqual("research_core_preview", preview.json()["mode"])
+        self.assertFalse(preview.json()["saved"])
+        self.assertEqual("grams × stored per-100 g value ÷ 100", preview.json()["formula"])
+        invalid = client.post(
+            "/api/composition/calculate",
+            json={"items": [{"food_uid": foods[0]["food_uid"], "grams": float("nan")}]},
+            headers={"X-CSRF-Token": csrf},
+        )
+        self.assertEqual(400, invalid.status_code)
+        malformed = client.post(
+            "/api/composition/calculate",
+            json={"items": {"food_uid": foods[0]["food_uid"], "grams": 100}},
+            headers={"X-CSRF-Token": csrf},
+        )
+        self.assertEqual(400, malformed.status_code)
+
 if __name__ == "__main__":
     unittest.main()

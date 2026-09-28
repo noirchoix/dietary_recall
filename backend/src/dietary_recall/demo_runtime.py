@@ -67,6 +67,43 @@ def _create_synthetic_legacy(path: Path) -> None:
         for index in range(1, 9)
     )
 
+    # Deliberately sparse, clearly synthetic composition values.  Earlier demo
+    # builds filled almost every field with a numeric sequence.  That exercised
+    # migration code, but it also made the public calculator look as though it
+    # contained comprehensive measured composition.  These values exist only
+    # to demonstrate scaling and missingness; they are not reference data.
+    composition: dict[int, dict[str, dict[str, float]]] = {
+        1001: {
+            "Basic_Components": {
+                "Calories_kcal": 150.0, "Protein_g": 3.0, "Carbohydrates_g": 28.0,
+                "Dietary_Fibre_g": 2.0, "Fat_g": 3.0, "Water_g": 65.0,
+            },
+            "Minerals": {"Iron_mg": 1.2, "Potassium_mg": 120.0, "Sodium_mg": 180.0},
+        },
+        1002: {
+            "Basic_Components": {
+                "Calories_kcal": 132.0, "Protein_g": 7.2, "Carbohydrates_g": 20.5,
+                "Dietary_Fibre_g": 5.3, "Fat_g": 2.5, "Water_g": 63.0,
+            },
+            "Minerals": {"Calcium_mg": 42.0, "Iron_mg": 2.1, "Potassium_mg": 260.0},
+        },
+        1003: {
+            "Basic_Components": {
+                "Calories_kcal": 118.0, "Protein_g": 2.1, "Carbohydrates_g": 24.0,
+                "Dietary_Fibre_g": 2.7, "Fat_g": 1.8, "Water_g": 69.0,
+            },
+            "Minerals": {"Iron_mg": 0.9, "Potassium_mg": 240.0, "Sodium_mg": 95.0},
+        },
+        1004: {
+            "Basic_Components": {
+                "Calories_kcal": 84.0, "Protein_g": 4.0, "Carbohydrates_g": 7.5,
+                "Dietary_Fibre_g": 3.2, "Fat_g": 4.2, "Water_g": 78.0,
+            },
+            "Minerals": {"Calcium_mg": 68.0, "Iron_mg": 2.4, "Potassium_mg": 310.0},
+            "Toxicants": {"Cadmium_mcg": 0.8},
+        },
+    }
+
     con = sqlite3.connect(path)
     try:
         con.execute(
@@ -79,21 +116,17 @@ def _create_synthetic_legacy(path: Path) -> None:
         )
         con.executemany("INSERT INTO Person VALUES (?,?,?,?,?,?,?,?,?,?,?)", people)
 
-        for table_index, (table, fields) in enumerate(TABLE_FIELDS.items(), start=1):
+        for table, fields in TABLE_FIELDS.items():
             definitions = ",".join(f'"{field}" REAL' for field in fields)
-            con.execute(f'CREATE TABLE "{table}"(id INTEGER PRIMARY KEY, Food_ID INTEGER, {definitions})')
-            placeholders = ",".join("?" for _ in range(2 + len(fields)))
-            for food_index, (_, food_id, _, _) in enumerate(foods, start=1):
-                values: list[float | None] = []
-                for field_index in range(len(fields)):
-                    # Deterministic illustrative values with explicit missingness.
-                    if (food_index + field_index + table_index) % 7 == 0:
-                        values.append(None)
-                    else:
-                        values.append(round((food_index * 2.5) + (field_index * 0.17) + table_index, 3))
+            con.execute(
+                f'CREATE TABLE "{table}"(id INTEGER PRIMARY KEY, Food_ID INTEGER, Food_Name TEXT, {definitions})'
+            )
+            placeholders = ",".join("?" for _ in range(3 + len(fields)))
+            for food_index, (_, food_id, food_name, _) in enumerate(foods, start=1):
+                values = [composition.get(food_id, {}).get(table, {}).get(field) for field in fields]
                 con.execute(
                     f'INSERT INTO "{table}" VALUES ({placeholders})',
-                    [food_index, food_id, *values],
+                    [food_index, food_id, food_name, *values],
                 )
         con.commit()
     finally:
@@ -146,7 +179,7 @@ def initialize_demo_workspace(
             con.executemany(
                 "INSERT OR REPLACE INTO research_meta(key,value) VALUES (?,?)",
                 (
-                    ("platform_release", "0.5.0"),
+                    ("platform_release", "0.5.1"),
                     ("deployment_mode", "ephemeral_synthetic_demo"),
                     ("demo_data_policy", "synthetic_only_resets_on_service_restart"),
                 ),

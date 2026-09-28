@@ -1,4 +1,11 @@
-# Dietary Recall Research Platform v0.5.0
+# Dietary Recall Research Platform v0.5.1
+
+v0.5.1 is a product-truth and demo-reliability patch. It restores a direct
+food-plus-grams composition workflow, fixes the synthetic legacy-calculation
+500, keeps missing values explicit, handles Render startup responses clearly,
+and labels features that require imported data, independent reviewers or
+operator configuration. See `FUNCTIONAL_AUDIT_v0.5.1.md` for the original-goal
+comparison, discrepancies, edge cases and remaining production blockers.
 
 v0.5 turns the research dashboard into a routed platform experience. Public
 landing, capability and research-plan pages are separate from authenticated
@@ -19,6 +26,12 @@ synthetic records and separate credentials under ephemeral storage. It never
 loads the PhD research files. See
 `backend/docs/RENDER_DEMO_DEPLOYMENT.md` for the data decision, exact Blueprint
 steps, expected cold starts/resets and the later production promotion path.
+
+After sign-in, **Composition calculator** accepts one or more foods and gram
+weights. It applies `grams × stored per-100 g value ÷ 100`, reports missing
+components separately and does not create a recall or infer unavailable
+nutrients. The bundled synthetic values demonstrate behavior only; they are
+not reference composition data.
 
 ## Capability layers
 
@@ -108,7 +121,7 @@ The command refuses an existing target and verifies that the source checksum is 
 
 ## Verification snapshot
 
-- Python: the full suite plus API-only boundary, cookie and CSRF integration tests pass; one optional real Java-serialized golden case is skipped when `DIETARY_RECALL_TEST_DB` is not configured.
-- SvelteKit: `npm run check` completes with zero errors and 120 accessibility warnings in compact markup; the static production build succeeds.
+- Python: 47 tests pass; one optional real Java-serialized golden case is skipped when `DIETARY_RECALL_TEST_DB` is not configured.
+- SvelteKit: `npm run check` completes with zero errors and zero warnings; the static production build succeeds.
 - Real archive migration: 141 foods, 863 participants and 7,755 component records; schema version 4.
 - Immutable source SHA-256 before and after migration: `9526c7baaf6c01d6bd7b4d85ef462ccc872a963b7cb74268826310cd6ec65359`.

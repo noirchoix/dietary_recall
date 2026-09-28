@@ -45,6 +45,33 @@ class V03PlatformTests(unittest.TestCase):
         self.assertNotIn(created["food_name"], default_names)
         self.assertIn(created["food_name"], new_names)
 
+    def test_paid_project_cannot_be_self_provisioned(self):
+        with self.assertRaises(ValueError):
+            self.repo.create_project(
+                {"project_name": "Unverified paid project", "plan_code": "paid"},
+                "test",
+            )
+
+    def test_project_count_limit_is_enforced_per_plan(self):
+        self.repo.create_project(
+            {"project_name": "Allowed student project", "project_code": "STUDENT-LIMIT-1", "plan_code": "student"},
+            "test",
+        )
+        with self.assertRaises(QuotaExceededError):
+            self.repo.create_project(
+                {"project_name": "Excess student project", "project_code": "STUDENT-LIMIT-2", "plan_code": "student"},
+                "test",
+            )
+        with self.assertRaises(ValueError):
+            self.repo.create_project(
+                {
+                    "project_name": "Unverified override",
+                    "plan_code": "independent",
+                    "import_rows_override": 1000,
+                },
+                "test",
+            )
+
     def test_import_quota_is_atomic_and_staging_is_free(self):
         project = self.repo.create_project({"project_name": "Quota study", "project_code": "QUOTA-1", "plan_code": "student"}, "test")
         rows = ["legacy_food_id,food_name"] + [f",Quota food {index}" for index in range(51)]

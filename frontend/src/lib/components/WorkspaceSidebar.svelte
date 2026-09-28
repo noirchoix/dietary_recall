@@ -20,7 +20,7 @@
       { path: '/imports', label: 'Batch import', code: 'IM' }
     ]},
     { label: 'Composition science', items: [
-      { path: '/ontology', label: 'Nutrient ontology', code: 'ON' }, { path: '/sources', label: 'Sources & provenance', code: 'SP' },
+      { path: '/calculator', label: 'Composition calculator', code: 'CA' }, { path: '/ontology', label: 'Nutrient ontology', code: 'ON' }, { path: '/sources', label: 'Sources & provenance', code: 'SP' },
       { path: '/matching', label: 'Food matching', code: 'FM' }, { path: '/recipes', label: 'Recipes & retention', code: 'RR' }
     ]},
     { label: 'Governance', items: [

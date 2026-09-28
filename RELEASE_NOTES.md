@@ -1,3 +1,50 @@
+# v0.5.1 — Direct composition, reliable startup and product truth
+
+## Restored original workflow
+
+- Added a project-scoped composition calculator that accepts one or more foods
+  and gram weights, scales only stored per-100 g values, preserves missingness
+  and returns a reproducible input snapshot without creating a recall.
+- Added calculator navigation and a first-class workspace action so the core
+  food-plus-grams task is no longer hidden behind participant and recall entry.
+- Fixed the disposable legacy fixture: composition tables now include the
+  `Food_Name` column required by the preserved legacy query, eliminating the
+  `/api/legacy/calculate` 500.
+
+## Reliability and validation
+
+- Added finite-number, positive-weight and unit-consistency validation across
+  preview, recall and legacy calculations.
+- Converted unexpected backend exceptions to a logged, non-disclosing JSON 500
+  response and reject non-finite JSON numeric constants.
+- Added explicit Render-startup handling and bounded retry feedback instead of
+  exposing HTML-to-JSON parsing errors on the sign-in route.
+- Added no-cache delivery for the static application shell and immutable cache
+  headers for fingerprinted assets to reduce stale-build mismatches.
+
+## Product-truth corrections
+
+- Replaced hard-coded landing metrics that disagreed with the synthetic data.
+- Replaced the all-checkmark capability page with Available, Data-dependent and
+  Setup-required states.
+- Relabeled plans as capacity documentation rather than a live storefront and
+  removed browser-side self-provisioning of paid entitlements and overrides.
+- Disclosed the single-account limits of contributor and independent-review
+  workflows; decision buttons remain unavailable without a separately verified
+  specialist.
+- Replaced dense invented demo values with sparse, clearly illustrative rows.
+- Enforced each non-paid plan's advertised active-project count for project
+  owners.
+
+## Verification
+
+- 47 backend tests pass; one optional real-archive golden fixture is skipped
+  unless `DIETARY_RECALL_TEST_DB` is configured.
+- SvelteKit checking reports zero errors and zero warnings; the adapter-static
+  production build succeeds.
+- Repository safety verification passes with no tracked databases, raw exports,
+  secrets or local environment files.
+
 # v0.5.0 — Platform experience and disposable demonstration
 
 ## Platform information architecture

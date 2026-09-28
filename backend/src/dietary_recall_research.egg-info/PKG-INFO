@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: dietary-recall-research
-Version: 0.5.0
+Version: 0.5.1
 Summary: Governed dietary recall research platform with provenance, licensed ingestion and reproducible analytics
 Requires-Python: >=3.10
 Requires-Dist: uvicorn[standard]<1,>=0.30

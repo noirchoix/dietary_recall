@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+import math
 from typing import Any
 
 from .constants import (
@@ -51,8 +52,8 @@ def calculate_foods(repository: LegacyRepository, portions: Iterable[FoodPortion
     frozen = tuple(portions)
     totals = {table: {field: 0.0 for field in fields} for table, fields in TABLE_FIELDS.items()}
     for portion in frozen:
-        if portion.grams < 0:
-            raise ValueError("Food weight cannot be negative")
+        if not math.isfinite(portion.grams) or portion.grams < 0:
+            raise ValueError("Food weight must be finite and cannot be negative")
         food = repository.food_row(portion.food_id)
         food_name = str(food["Food_Name"])
         for table, fields in TABLE_FIELDS.items():

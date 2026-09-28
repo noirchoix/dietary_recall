@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sqlite3
 import uuid
 from collections import defaultdict
@@ -238,8 +239,14 @@ class ResearchRepository:
             before = dict(before_row) if before_row else None
             value = data.get("value")
             value = None if value in (None, "") else float(value)
+            if value is not None and not math.isfinite(value):
+                raise ValueError("component value must be finite")
             status = str(data.get("value_status") or ("missing" if value is None else "measured"))
             unit = str(data.get("unit") or nutrient["unit"])
+            if unit != nutrient["unit"]:
+                raise ValueError(
+                    f"Research Core component {nutrient['display_name']} must use {nutrient['unit']}"
+                )
             provenance = data.get("provenance_json") or data.get("provenance") or {}
             if isinstance(provenance, str):
                 try:
@@ -454,8 +461,8 @@ class ResearchRepository:
             )
             for index, item in enumerate(items):
                 amount = float(item.get("amount_g") or 0)
-                if amount < 0:
-                    raise ValueError("amount_g cannot be negative")
+                if not math.isfinite(amount) or amount <= 0:
+                    raise ValueError("amount_g must be a finite value greater than zero")
                 food_uid = str(item.get("food_uid") or "")
                 self._one(con, "SELECT food_uid FROM research_foods WHERE food_uid=? AND active=1", (food_uid,))
                 con.execute(
@@ -479,7 +486,14 @@ class ResearchRepository:
             (recall_uid,),
         )
         for row in rows:
-            totals[row["nutrient_code"]] += float(row["amount_g"]) * float(row["value"]) / 100.0
+            value = float(row["value"])
+            amount = float(row["amount_g"])
+            if not math.isfinite(value) or not math.isfinite(amount):
+                raise ValueError("Recall inputs and stored component values must be finite")
+            previous_unit = units.get(row["nutrient_code"])
+            if previous_unit is not None and previous_unit != row["unit"]:
+                raise ValueError("Recall cannot combine the same component across incompatible units")
+            totals[row["nutrient_code"]] += amount * value / 100.0
             units[row["nutrient_code"]] = row["unit"]
             snapshot.append(f"{row['component_value_uid']}:{row['version']}:{row['value']}")
         snap_hash = hashlib.sha256("|".join(sorted(snapshot)).encode()).hexdigest()
