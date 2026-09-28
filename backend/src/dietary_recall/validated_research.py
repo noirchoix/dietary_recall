@@ -5,6 +5,7 @@ from __future__ import annotations
 import difflib
 import hashlib
 import json
+import math
 import re
 import sqlite3
 import uuid
@@ -31,7 +32,7 @@ class QuotaExceededError(ValueError):
         self.used = used
         self.limit = limit
         self.requested = requested
-        super().__init__(f"{metric} quota exceeded: {used} used + {requested} requested > {limit} monthly limit")
+        super().__init__(f"{metric} quota exceeded: {used} used + {requested} requested > {limit} limit")
 
 
 def _period_key() -> str:
@@ -108,20 +109,28 @@ class PlatformRepository(ResearchRepository):
         if not name:
             raise ValueError("project_name is required")
         plan = str(data.get("plan_code") or "student")
-        if plan not in {"student", "independent", "paid"}:
-            raise ValueError("plan_code must be student, independent or paid")
+        if plan not in {"student", "independent"}:
+            raise ValueError(
+                "New projects may use student or independent plans; paid entitlements require verified billing or an operator grant"
+            )
         import_override = data.get("import_rows_override")
         calculation_override = data.get("calculation_runs_override")
-        if plan != "paid" and (import_override not in (None, "") or calculation_override not in (None, "")):
-            raise ValueError("Quota overrides are available only on the paid plan")
-        if import_override not in (None, "") and int(import_override) <= 100:
-            raise ValueError("Paid import override must be greater than 100")
-        if calculation_override not in (None, "") and int(calculation_override) <= 100:
-            raise ValueError("Paid calculation override must be greater than 100")
+        if import_override not in (None, "") or calculation_override not in (None, ""):
+            raise ValueError("Quota overrides require verified billing or an operator grant")
         with self.connect() as con:
             con.execute("BEGIN IMMEDIATE")
             user = self._actor_user(con, actor)
             definition = con.execute("SELECT * FROM plan_definitions WHERE plan_code=? AND active=1", (plan,)).fetchone()
+            if definition is None:
+                raise ValueError("Selected project plan is not active")
+            owned_on_plan = con.execute(
+                "SELECT COUNT(*) FROM project_memberships m "
+                "JOIN research_projects p USING(project_uid) JOIN project_subscriptions s USING(project_uid) "
+                "WHERE m.user_uid=? AND m.project_role='owner' AND m.status='active' AND p.status='active' AND s.plan_code=?",
+                (user["user_uid"], plan),
+            ).fetchone()[0]
+            if owned_on_plan >= definition["max_projects"]:
+                raise QuotaExceededError("projects", int(owned_on_plan), int(definition["max_projects"]), 1)
             uid = _uid("proj")
             code = str(data.get("project_code") or _slug(name)[:28] or uuid.uuid4().hex[:8])
             con.execute(
@@ -319,6 +328,132 @@ class PlatformRepository(ResearchRepository):
                 f"WHERE {where} GROUP BY f.food_uid ORDER BY f.food_name LIMIT ?",
                 params,
             )]
+
+    def calculate_food_portions(
+        self,
+        project_uid: str,
+        items: Iterable[Mapping[str, Any]],
+        actor: str = "local-researcher",
+    ) -> dict[str, Any]:
+        """Scale current Research Core composition without creating a recall.
+
+        This is an inspection calculation: it does not mutate the research
+        record or consume a saved-calculation allowance.  Missing component
+        values remain missing and are reported separately instead of becoming
+        zero.
+        """
+        if isinstance(items, (str, bytes, Mapping)):
+            raise ValueError("items must be a JSON array of food portions")
+        try:
+            portions = list(items)
+        except TypeError as exc:
+            raise ValueError("items must be a JSON array of food portions") from exc
+        if not portions:
+            raise ValueError("At least one food portion is required")
+        if len(portions) > 50:
+            raise ValueError("A composition preview accepts at most 50 food portions")
+
+        totals: dict[str, float] = defaultdict(float)
+        definitions: dict[str, dict[str, Any]] = {}
+        units: dict[str, str] = {}
+        snapshot: list[str] = []
+        calculated_items: list[dict[str, Any]] = []
+
+        with self.connect() as con:
+            self._membership(con, project_uid, actor)
+            for index, item in enumerate(portions):
+                if not isinstance(item, Mapping):
+                    raise ValueError(f"Food portion {index + 1} must be an object")
+                food_uid = str(item.get("food_uid") or "").strip()
+                if not food_uid:
+                    raise ValueError(f"Food portion {index + 1} is missing food_uid")
+                try:
+                    grams = float(item.get("grams"))
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(f"Food portion {index + 1} requires a numeric gram weight") from exc
+                if not math.isfinite(grams) or grams <= 0:
+                    raise ValueError(f"Food portion {index + 1} grams must be a finite value greater than zero")
+
+                self._assert_record(con, project_uid, "food", food_uid)
+                food = self._one(
+                    con,
+                    "SELECT food_uid,legacy_food_id,food_name,preparation_method,description "
+                    "FROM research_foods WHERE food_uid=? AND active=1",
+                    (food_uid,),
+                )
+                rows = list(con.execute(
+                    "SELECT c.component_value_uid,c.nutrient_code,c.value,c.unit,c.basis,c.value_status,c.source_type,c.version,"
+                    "n.display_name,n.component_group,n.component_kind "
+                    "FROM food_component_values c JOIN nutrient_definitions n USING(nutrient_code) "
+                    "WHERE c.food_uid=? AND n.active=1 ORDER BY n.component_group,n.display_name",
+                    (food_uid,),
+                ))
+                available = 0
+                missing: list[dict[str, str]] = []
+                for row in rows:
+                    definition = {
+                        "nutrient_code": row["nutrient_code"],
+                        "display_name": row["display_name"],
+                        "component_group": row["component_group"],
+                        "component_kind": row["component_kind"],
+                    }
+                    definitions[row["nutrient_code"]] = definition
+                    if row["value"] is None:
+                        missing.append({
+                            "nutrient_code": row["nutrient_code"],
+                            "display_name": row["display_name"],
+                            "component_group": row["component_group"],
+                        })
+                        continue
+                    value = float(row["value"])
+                    if not math.isfinite(value):
+                        raise ValueError(f"Stored component {row['display_name']} is not finite")
+                    if row["basis"] != "per_100g":
+                        raise ValueError(
+                            f"Stored component {row['display_name']} uses unsupported basis {row['basis']}"
+                        )
+                    previous_unit = units.get(row["nutrient_code"])
+                    if previous_unit is not None and previous_unit != row["unit"]:
+                        raise ValueError(
+                            f"Cannot combine {row['display_name']} values reported in {previous_unit} and {row['unit']}"
+                        )
+                    units[row["nutrient_code"]] = row["unit"]
+                    scaled = grams * value / 100.0
+                    totals[row["nutrient_code"]] += scaled
+                    available += 1
+                    snapshot.append(
+                        f"{food_uid}:{grams:.12g}:{row['component_value_uid']}:{row['version']}:{value:.12g}:{row['unit']}"
+                    )
+                calculated_items.append({
+                    **food,
+                    "grams": grams,
+                    "available_component_count": available,
+                    "missing_component_count": len(missing),
+                    "missing_components": missing,
+                })
+
+        results = [
+            {
+                **definitions[code],
+                "value": value,
+                "unit": units[code],
+            }
+            for code, value in totals.items()
+        ]
+        results.sort(key=lambda row: (row["component_group"], row["display_name"]))
+        return {
+            "mode": "research_core_preview",
+            "formula": "grams × stored per-100 g value ÷ 100",
+            "basis": "per_100g",
+            "saved": False,
+            "items": calculated_items,
+            "results": results,
+            "snapshot_hash": hashlib.sha256("|".join(sorted(snapshot)).encode()).hexdigest(),
+            "warnings": [
+                "Only stored, non-missing component values are scaled; missing values are not treated as zero.",
+                "Synthetic demo values are illustrative and must not be used as reference composition or clinical evidence.",
+            ],
+        }
 
     def get_project_food(self, project_uid: str, food_uid: str, actor: str = "local-researcher") -> dict[str, Any]:
         with self.connect() as con:

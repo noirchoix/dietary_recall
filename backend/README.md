@@ -1,4 +1,4 @@
-# Dietary Recall Analysis — Python Research Platform v0.5.0
+# Dietary Recall Analysis — Python Research Platform v0.5.1
 
 v0.5 retains the v0.4 scientific and API schema while adding a deterministic
 synthetic demonstration runtime. `dietary-recall demo-serve` creates disposable

@@ -4,8 +4,12 @@ import unittest
 from contextlib import closing
 from pathlib import Path
 
+from dietary_recall.db import LegacyRepository
 from dietary_recall.demo_runtime import initialize_demo_workspace
+from dietary_recall.legacy import FoodPortion, calculate_foods
 from dietary_recall.security import CredentialStore
+from dietary_recall.v03_schema import DEFAULT_PROJECT_UID
+from dietary_recall.validated_research import PlatformRepository
 
 
 class DemoRuntimeTests(unittest.TestCase):
@@ -33,6 +37,42 @@ class DemoRuntimeTests(unittest.TestCase):
         status = CredentialStore(result.credential_store).status()
         self.assertEqual(1, status["active_credentials"])
         self.assertFalse(status["plaintext_passwords_stored"])
+
+    def test_synthetic_calculations_scale_real_seed_rows_and_keep_missingness_explicit(self):
+        result = initialize_demo_workspace(self.root, "Synthetic-demo-passphrase-2026")
+        legacy = calculate_foods(LegacyRepository(result.legacy_database), [FoodPortion(1002, 150)])
+        self.assertAlmostEqual(10.8, legacy.totals["Basic_Components"]["Protein_g"])
+        self.assertAlmostEqual(3.15, legacy.totals["Minerals"]["Iron_mg"])
+
+        repo = PlatformRepository(result.research_database)
+        food = next(
+            row for row in repo.list_project_foods(DEFAULT_PROJECT_UID, result.email)
+            if row["legacy_food_id"] == 1002
+        )
+        preview = repo.calculate_food_portions(
+            DEFAULT_PROJECT_UID,
+            [{"food_uid": food["food_uid"], "grams": 150}],
+            result.email,
+        )
+        protein = next(row for row in preview["results"] if row["display_name"] == "Protein")
+        iron = next(row for row in preview["results"] if row["display_name"] == "Iron")
+        self.assertAlmostEqual(10.8, protein["value"])
+        self.assertAlmostEqual(3.15, iron["value"])
+        self.assertFalse(preview["saved"])
+        self.assertGreater(preview["items"][0]["missing_component_count"], 0)
+        self.assertNotIn("Vitamin A IU", {row["display_name"] for row in preview["results"]})
+
+    def test_composition_preview_rejects_zero_nonfinite_and_cross_project_inputs(self):
+        result = initialize_demo_workspace(self.root, "Synthetic-demo-passphrase-2026")
+        repo = PlatformRepository(result.research_database)
+        food = repo.list_project_foods(DEFAULT_PROJECT_UID, result.email)[0]
+        for grams in (0, float("nan"), float("inf")):
+            with self.assertRaises(ValueError):
+                repo.calculate_food_portions(
+                    DEFAULT_PROJECT_UID,
+                    [{"food_uid": food["food_uid"], "grams": grams}],
+                    result.email,
+                )
 
     def test_reset_discards_prior_demo_mutations(self):
         first = initialize_demo_workspace(self.root, "Synthetic-demo-passphrase-2026")

@@ -59,6 +59,12 @@ export class ApiError extends Error {
   }
 }
 
+const STARTUP_STATUS = new Set([502, 503, 504]);
+
+function sleep(milliseconds: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+}
+
 export async function api<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const method = String(options.method || 'GET').toUpperCase();
   const response = await fetch(path, {
@@ -72,15 +78,19 @@ export async function api<T = any>(path: string, options: RequestInit = {}): Pro
       ...(options.headers || {})
     }
   });
-  if (!response.ok) {
-    let message = `${response.status} ${response.statusText}`;
-    try {
-      const body = await response.json();
-      message = body.error || message;
-    } catch {}
-    throw new ApiError(response.status, message);
+  const text = await response.text();
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    const status = response.ok ? 503 : response.status;
+    const message = response.ok
+      ? 'The research API is starting or the /api rewrite is not configured.'
+      : `${response.status} ${response.statusText}`;
+    throw new ApiError(status, message);
   }
-  return response.json() as Promise<T>;
+  if (!response.ok) throw new ApiError(response.status, body?.error || `${response.status} ${response.statusText}`);
+  return body as T;
 }
 
 export async function authStatus() {
@@ -109,6 +119,26 @@ export async function logout() {
 export const get = <T = any>(path: string) => api<T>(path);
 export const post = <T = any>(path: string, body: any) => api<T>(path, { method: 'POST', body: JSON.stringify(body) });
 export const put = <T = any>(path: string, body: any) => api<T>(path, { method: 'PUT', body: JSON.stringify(body) });
+
+export async function getWithStartupRetry<T = any>(
+  path: string,
+  onRetry?: (attempt: number) => void,
+  attempts = 20,
+  delayMilliseconds = 3000
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await get<T>(path);
+    } catch (error) {
+      lastError = error;
+      if (!(error instanceof ApiError) || !STARTUP_STATUS.has(error.status) || attempt === attempts) throw error;
+      onRetry?.(attempt);
+      await sleep(delayMilliseconds);
+    }
+  }
+  throw lastError;
+}
 
 export async function summaryWithFallback() {
   try {

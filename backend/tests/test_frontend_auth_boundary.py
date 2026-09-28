@@ -6,6 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LAYOUT = PROJECT_ROOT / "frontend" / "src" / "routes" / "+layout.svelte"
 LOGIN = PROJECT_ROOT / "frontend" / "src" / "routes" / "login" / "+page.svelte"
 SIDEBAR = PROJECT_ROOT / "frontend" / "src" / "lib" / "components" / "WorkspaceSidebar.svelte"
+CALCULATOR = PROJECT_ROOT / "frontend" / "src" / "routes" / "calculator" / "+page.svelte"
 
 
 class FrontendAuthenticationBoundaryTests(unittest.TestCase):
@@ -28,6 +29,7 @@ class FrontendAuthenticationBoundaryTests(unittest.TestCase):
         self.assertIn("['/', '/features', '/pricing', '/login']", layout)
         self.assertIn("Data collection", sidebar)
         self.assertIn("Composition science", sidebar)
+        self.assertIn("Composition calculator", sidebar)
         self.assertIn("Governance", sidebar)
         self.assertIn("onCollapse", sidebar)
         self.assertNotIn("Usage & plan", sidebar)
@@ -42,6 +44,12 @@ class FrontendAuthenticationBoundaryTests(unittest.TestCase):
         self.assertIn("auth-set-password", source)
         self.assertIn('class="login-button"', source)
         self.assertIn("/projects", source)
+
+    def test_composition_calculator_exposes_formula_and_missingness_boundary(self):
+        source = CALCULATOR.read_text(encoding="utf-8")
+        self.assertIn("/api/composition/calculate", source)
+        self.assertIn("stored per-100 g value", source)
+        self.assertIn("Missing values are not converted to zero", source)
 
 
 if __name__ == "__main__":

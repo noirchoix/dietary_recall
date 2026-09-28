@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 from dataclasses import asdict
@@ -22,9 +23,14 @@ from .security import AuthError, CredentialStore
 from .validated_research import PlatformRepository, QuotaExceededError
 
 
-API_VERSION = "0.5.0"
+API_VERSION = "0.5.1"
 MAX_REQUEST_BYTES = 36 * 1024 * 1024
 LOCAL_ORIGIN_REGEX = r"^http://(?:127\.0\.0\.1|localhost)(?::\d+)?$"
+LOGGER = logging.getLogger(__name__)
+
+
+def _reject_nonfinite_json(value: str) -> None:
+    raise ValueError(f"JSON numeric value {value} is not permitted")
 
 
 def _json_response(value: Any, status_code: int = 200, headers: Mapping[str, str] | None = None) -> Response:
@@ -60,7 +66,7 @@ async def _json_object(request: Request) -> dict[str, Any]:
     if len(raw) > MAX_REQUEST_BYTES:
         raise ValueError("Request exceeds the 36 MiB API limit")
     try:
-        value = json.loads(raw.decode("utf-8") or "{}")
+        value = json.loads(raw.decode("utf-8") or "{}", parse_constant=_reject_nonfinite_json)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("Request body must contain valid UTF-8 JSON") from exc
     if not isinstance(value, dict):
@@ -173,8 +179,9 @@ def create_app(
             response = _error_response(403, exc)
         except sqlite3.IntegrityError as exc:
             response = _error_response(409, exc)
-        except Exception as exc:  # Keep the v0.4 JSON error contract.
-            response = _error_response(500, exc)
+        except Exception as exc:  # Keep the JSON error contract without leaking internals.
+            LOGGER.exception("Unhandled API error for %s %s", request.scope.get("method"), request.scope.get("path"))
+            response = _error_response(500, "Internal server error")
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
@@ -276,7 +283,7 @@ def create_app(
         if path == "/api/layers":
             return _json_response(
                 [
-                    {"id": "legacy_compatibility", "status": "available", "writable": False, "description": "Recoverable Java-compatible calculation behavior"},
+                    {"id": "legacy_compatibility", "status": "available" if legacy_repository is not None else "not_configured", "writable": False, "description": "Recoverable Java-compatible calculation behavior"},
                     {"id": "research_core", "status": "active", "writable": True, "description": "Versioned normalized research records"},
                     {"id": "validated_research", "status": "active", "writable": True, "description": "Canonical units, explicit provenance, reviewed matches, recipes and retention"},
                     {"id": "governed_analytics", "status": "active", "writable": True, "description": "Suppressed cohort descriptives, review-only QC flags and specialist-approved match triage"},
@@ -458,6 +465,8 @@ def create_app(
             return _json_response(repository.add_experiment_result(parts[2], body, current_actor), 201)
         if path == "/api/recalls":
             return _json_response(repository.create_project_recall(project_uid, body, current_actor), 201)
+        if path == "/api/composition/calculate":
+            return _json_response(repository.calculate_food_portions(project_uid, body.get("items") or [], current_actor))
         if path == "/api/imports/stage":
             return _json_response(stage_import_base64(repository, body, current_actor, project_uid), 201)
         if len(parts) == 4 and parts[:2] == ["api", "imports"] and parts[3] == "commit":
